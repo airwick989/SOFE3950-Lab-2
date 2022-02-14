@@ -1,0 +1,7 @@
+echo Hello, this is from the batch file.
+echo I'm just here for demonstration purposes.
+echo I'm going to print the contents of the current working directory
+dir
+echo By the way, here's the help manual if you need any assistance
+help
+echo Anyways, I'm going to go now. Nice talking to you!

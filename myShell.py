@@ -102,7 +102,6 @@ def execute(userInput):
 
 
 ########################################################-- LOOP STARTS HERE --################################################################
-os.system('clear')
 
 if len(sys.argv) > 1:
     try:
@@ -110,12 +109,16 @@ if len(sys.argv) > 1:
             lines = []
             for line in file_in:
                 lines.append(line)
+        
+        for line in lines:
+            line = line.strip()
+            execute(line)
     except Exception:
-        print(f"{sys.argv[1]} is not a recognized batch file in the current directory")
-else:
-    while True:
-        userInput = input(f"\033[32m{os.getcwd()}\nmyshell>>\033[37m ")
-        execute(userInput)
+        print(f"{sys.argv[1]} is not a recognized batch file in the current directory...\nContinuing normal execution\n")
+        
+while True:
+    userInput = input(f"\033[32m{os.getcwd()}\nmyshell>>\033[37m ")
+    execute(userInput)
     
     
 
