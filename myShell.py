@@ -66,7 +66,7 @@ def psh_help():
 
 def main():
     while True:
-        inp = input("$ ")
+        inp = input(f"{os.getcwd()}\n$ ")
         if inp == "exit":
             break
         elif inp[:3] == "cd ":
