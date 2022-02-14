@@ -1,6 +1,5 @@
 import os
-
-from pytest import param
+import sys
 
 
 
@@ -13,6 +12,8 @@ def cd(path):
             os.chdir(os.path.abspath(path))
     except Exception:
         print("cd: no such file or directory: {}".format(path))
+
+
 
 def dir(path):
     contents = []
@@ -35,10 +36,15 @@ def dir(path):
         print("dir: no such file or directory: {}".format(path))
 
 
+
+def help():
+    pass
+
+
 ########################################################-- LOOP STARTS HERE --################################################################
 os.system('cls')
 while True:
-    userInput = input(f"{os.getcwd()}\n>> ")
+    userInput = input(f"\033[1;32m{os.getcwd()}\n>>\033[1;37m ")
     
     userInput = userInput.split(" ")
     command = userInput[0]
@@ -58,6 +64,17 @@ while True:
         os.system('cls')
     elif command == "dir":
         dir(parameter)
+    elif command == "environ":
+        print(f"{os.environ}\n")
+    elif command == "echo":
+        print(f"{parameter}\n")
+    elif command == "help":
+        help()
+    elif command == "pause":
+        input("Press Enter key to continue...\n")
+    elif command == "quit":
+        print("\033[1;32mExiting shell...\n>>\033[1;37m")
+        sys.exit()
     else:
         print(f"{command} is not a recognized command\n")
 
