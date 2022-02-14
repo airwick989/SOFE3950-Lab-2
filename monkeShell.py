@@ -1,6 +1,6 @@
 import os
 
-from joblib import parallel_backend
+from pytest import param
 
 
 
@@ -15,13 +15,24 @@ def cd(path):
         print("cd: no such file or directory: {}".format(path))
 
 def dir(path):
+    contents = []
+    i = 1
+
     try:
         if(path == ""):
-            print(f"The current working directory is {os.getcwd()}\n")
+            contents = os.listdir(os.getcwd())
+            print(f"The contents of the current working directory are: \n")
+            for item in contents:
+                print(f"{i} - {item}\n")
+                i = i+1
         else:
-            os.chdir(os.path.abspath(path))
+            contents = os.listdir(path)
+            print(f"The contents of the specified directory are: \n")
+            for item in contents:
+                print(f"{i} - {item}\n")
+                i = i+1
     except Exception:
-        print("cd: no such file or directory: {}".format(path))
+        print("dir: no such file or directory: {}".format(path))
 
 
 ########################################################-- LOOP STARTS HERE --################################################################
@@ -29,10 +40,15 @@ os.system('cls')
 while True:
     userInput = input(f"{os.getcwd()}\n>> ")
     
-    command = userInput[:3]
-    command = command.strip()
-    parameter = userInput[3:]
-    parameter = parameter.strip()
+    userInput = userInput.split(" ")
+    command = userInput[0]
+    parameter = ""
+
+    for i in range(1, len(userInput)):
+        if i == 1:
+            parameter += userInput[i]
+        else:
+            parameter += f" {userInput[i]}"
 
     #print(f"command: {command}, parameter: {parameter}")
 
