@@ -1,81 +1,122 @@
-#!/usr/bin/env python3
-
-"""psh: a simple shell written in Python"""
-
 import os
-import subprocess
+import sys
 
 
-def execute_command(command):
-    """execute commands and handle piping"""
+
+#convert to absolute path and change directory
+def cd(path):
     try:
-        if "|" in command:
-            # save for restoring later on
-            s_in, s_out = (0, 0)
-            s_in = os.dup(0)
-            s_out = os.dup(1)
-
-            # first command takes commandut from stdin
-            fdin = os.dup(s_in)
-
-            # iterate over all the commands that are piped
-            for cmd in command.split("|"):
-                # fdin will be stdin if it's the first iteration
-                # and the readable end of the pipe if not.
-                os.dup2(fdin, 0)
-                os.close(fdin)
-
-                # restore stdout if this is the last command
-                if cmd == command.split("|")[-1]:
-                    fdout = os.dup(s_out)
-                else:
-                    fdin, fdout = os.pipe()
-
-                # redirect stdout to pipe
-                os.dup2(fdout, 1)
-                os.close(fdout)
-
-                try:
-                    subprocess.run(cmd.strip().split())
-                except Exception:
-                    print("psh: command not found: {}".format(cmd.strip()))
-
-            # restore stdout and stdin
-            os.dup2(s_in, 0)
-            os.dup2(s_out, 1)
-            os.close(s_in)
-            os.close(s_out)
+        if(path == ""):
+            print(f"The current working directory is {os.getcwd()}\n")
         else:
-            subprocess.run(command.split(" "))
-    except Exception:
-        print("psh: command not found: {}".format(command))
-
-
-def psh_cd(path):
-    """convert to absolute path and change directory"""
-    try:
-        os.chdir(os.path.abspath(path))
+            os.chdir(os.path.abspath(path))
     except Exception:
         print("cd: no such file or directory: {}".format(path))
 
 
-def psh_help():
-    print("""psh: shell implementation in Python.
-          Supports all basic shell commands.""")
 
+def dir(path):
+    contents = []
+    i = 1
 
-def main():
-    while True:
-        inp = input(f"{os.getcwd()}\n$ ")
-        if inp == "exit":
-            break
-        elif inp[:3] == "cd ":
-            psh_cd(inp[3:])
-        elif inp == "help":
-            psh_help()
+    try:
+        if(path == ""):
+            contents = os.listdir(os.getcwd())
+            print(f"The contents of the current working directory are: \n")
+            for item in contents:
+                print(f"{i} - {item}\n")
+                i = i+1
         else:
-            execute_command(inp)
+            contents = os.listdir(path)
+            print(f"The contents of the specified directory are: \n")
+            for item in contents:
+                print(f"{i} - {item}\n")
+                i = i+1
+    except Exception:
+        print("dir: no such file or directory: {}".format(path))
 
 
-if '__main__' == __name__:
-    main()
+
+def help():
+    with open("help.txt") as file_in:
+        lines = []
+        for line in file_in:
+            lines.append(line)
+    
+    for line in lines:
+        print(f"\033[34m{line}\033[37m")
+
+
+
+def invoke(program):
+    cmd = "/bin/python3"
+
+    pid = os.fork()
+    if pid == 0:
+        print(f"CHILD: child with pid = {os.getpid()}\n")
+        os.execv(cmd, (cmd, program))
+        sys.exit()
+    elif pid > 0:
+        print(f"PARENT: parent with pid = {os.getpid()}\n")
+        print("--- EVERYTHING BELOW IS FROM INSIDE THE INVOKED PROGRAM ---\n")
+        wval = os.wait()
+        print("\n--- BACK INSIDE THE SHELL ---\n")
+        print(f"PARENT: child has finished with exit code {wval}\n")
+    else:
+        print("forking error\n")
+
+def execute(userInput):
+    userInput = userInput.split(" ")
+    command = userInput[0]
+    parameter = ""
+
+    for i in range(1, len(userInput)):
+        if i == 1:
+            parameter += userInput[i]
+        else:
+            parameter += f" {userInput[i]}"
+
+    if command == "cd":
+        cd(parameter)
+    elif command == "clr":
+        os.system('clear')
+    elif command == "dir":
+        dir(parameter)
+    elif command == "environ":
+        print(f"{os.environ}\n")
+    elif command == "echo":
+        print(f"{parameter}\n")
+    elif command == "help":
+        help()
+    elif command == "pause":
+        input("Press Enter key to continue...\n")
+    elif command == "quit":
+        print("\033[32mExiting shell...\n>>\033[37m")
+        sys.exit()
+    else:
+        try:
+            invoke(command)
+        except Exception:
+            print(f"{command} is not a recognized program name in the current directory\n")
+
+
+
+########################################################-- LOOP STARTS HERE --################################################################
+os.system('clear')
+
+if len(sys.argv) > 1:
+    try:
+        with open(sys.argv[1]) as file_in:
+            lines = []
+            for line in file_in:
+                lines.append(line)
+    except Exception:
+        print(f"{sys.argv[1]} is not a recognized batch file in the current directory")
+else:
+    while True:
+        userInput = input(f"\033[32m{os.getcwd()}\nmyshell>>\033[37m ")
+        execute(userInput)
+    
+    
+
+
