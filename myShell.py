@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys, time
 
 
 
@@ -110,7 +109,9 @@ def execute(userInput):
         else:
             parameter += f" {userInput[i]}"
 
-    if command == "cd":
+    if '<' in userInput or '>' in userInput or '>>' in userInput:
+        redirection(userInput)
+    elif command == "cd":
         cd(parameter)
     elif command == "clr":
         os.system('clear')
@@ -130,6 +131,92 @@ def execute(userInput):
     else:
         command = userInput
         invoke(command)
+
+
+
+def redirection(userInput):
+
+    inputflag = False
+    outputFlag = False
+    outputAppendFlag = False
+    endOfStatement = 0
+    inputSource = ""
+    outputSource = ""
+    fdin = sys.__stdin__
+    fdout = sys.__stdout__
+
+    if '<' in userInput:
+        inputIndex = userInput.index('<')
+        inputflag = True
+    
+
+    if '>' in userInput:
+        outputIndex = userInput.index('>')
+        outputFlag = True
+    elif '>>' in userInput:
+        outputIndex = userInput.index('>>')
+        outputAppendFlag = True
+
+
+    if((inputflag and outputFlag) or (inputflag and outputAppendFlag)):
+        endOfStatement = min(inputIndex, outputIndex)
+        if inputIndex < outputIndex:
+            inputSource = userInput[inputIndex + 1:outputIndex]
+            outputSource = userInput[outputIndex + 1:]
+        else:
+            inputSource = userInput[inputIndex + 1:]
+            outputSource = userInput[outputIndex + 1:inputIndex]
+        
+        inputSource = " ".join(inputSource)
+        outputSource = " ".join(outputSource)
+        fdin = open(inputSource, "r")
+    elif(inputflag):
+        endOfStatement = inputIndex
+        inputSource = userInput[endOfStatement + 1:]
+
+        inputSource = " ".join(inputSource)
+        fdin = open(inputSource, "r")
+    else:
+        endOfStatement = outputIndex
+        outputSource = userInput[endOfStatement + 1:]
+        outputSource = " ".join(outputSource)
+
+
+    if outputFlag:
+        fdout = open(outputSource, 'w+')
+    elif outputAppendFlag:
+        if os.path.exists(outputSource):
+            fdout = open(outputSource, 'a')
+        else:
+            fdout = open(outputSource, 'w+')
+
+    sys.stdin = fdin
+    sys.stdout = fdout
+
+    prompt = userInput[:endOfStatement]
+    prompt = " ".join(prompt)
+
+    print(f"\ncommand: {prompt} | input source: {inputSource} | output source: {outputSource}\n")
+
+    if inputflag:
+        lines = []
+        for line in fdin:
+            lines.append(line)
+        
+        for line in lines:
+            line = line.strip()
+            prompt = "".join(line)
+            print(prompt)
+
+    if inputflag:
+        fdin.close()
+    if outputFlag:
+        fdout.close()
+    sys.stdin = sys.__stdin__
+    sys.stdout = sys.__stdout__
+
+    
+    
 
 
 
