@@ -48,25 +48,59 @@ def help():
 
 
 
-def invoke(program):
+def invoke(userInput):
     cmd = "/bin/python3"
-
     pid = os.fork()
+    
     if pid == 0:
+
         print(f"CHILD: child with pid = {os.getpid()}\n")
-        os.execv(cmd, (cmd, program))
-        sys.exit()
+        if len(userInput) > 1:
+            program = userInput[0]
+            sys.argv = userInput
+
+            try:
+                script_descriptor = open(program)
+                a_script = script_descriptor.read()
+            except Exception:
+                print(f"\033[31m{program} is not a recognized program within the current directory...\033[37m\n")
+                sys.exit()
+
+            try:
+                exec(a_script)
+                script_descriptor.close()
+                sys.exit()
+            except Exception:
+                print("\033[31mAborted invoked program:\nThe program you invoked incurred an error.")
+                print("Try checking the number of arguments you passed, just in case.\033[37m")
+                sys.exit()
+        else:
+            program = ""
+            for arg in userInput:
+                program += arg
+            
+            try:
+                os.execv(cmd, (cmd, program))
+                sys.exit()
+            except Exception:
+                print("\033[31mAborted invoked program:\nEither the entered program name is not a recognized program in the directory")
+                print("OR an error has incurred inside the invoked program.\033[37m")
+                sys.exit()
+
     elif pid > 0:
         print(f"PARENT: parent with pid = {os.getpid()}\n")
         print("--- EVERYTHING BELOW IS FROM INSIDE THE INVOKED PROGRAM ---\n")
         wval = os.wait()
         print("\n--- BACK INSIDE THE SHELL ---\n")
         print(f"PARENT: child has finished with exit code {wval}\n")
+        
     else:
-        print("forking error\n")
+        print("\033[31mforking error\n\033[37m")
+
+
 
 def execute(userInput):
-    userInput = userInput.split(" ")
+    userInput = userInput.strip().split(" ")
     command = userInput[0]
     parameter = ""
 
@@ -94,10 +128,8 @@ def execute(userInput):
         print("\033[32mExiting shell...\n>>\033[37m")
         sys.exit()
     else:
-        try:
-            invoke(command)
-        except Exception:
-            print(f"{command} is not a recognized program name in the current directory\n")
+        command = userInput
+        invoke(command)
 
 
 
