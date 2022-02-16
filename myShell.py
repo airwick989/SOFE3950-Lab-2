@@ -239,6 +239,7 @@ def redirection(userInput):
 
 ########################################################-- LOOP STARTS HERE --################################################################
 
+#This if for starting the shell with a batchfile
 if len(sys.argv) > 1:
     try:
         with open(sys.argv[1]) as file_in:
