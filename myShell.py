@@ -1,4 +1,4 @@
-import os, sys, time
+import os, sys, threading
 
 
 
@@ -47,45 +47,48 @@ def help():
 
 
 
-def invoke(userInput):
+def runProgram(userInput):
     cmd = "/bin/python3"
+    if len(userInput) > 1:
+        program = userInput[0]
+        sys.argv = userInput
+
+        try:
+            script_descriptor = open(program)
+            a_script = script_descriptor.read()
+        except Exception:
+            print(f"\033[31m{program} is not a recognized program within the current directory...\033[37m\n")
+            sys.exit()
+
+        try:
+            exec(a_script)
+            script_descriptor.close()
+            sys.exit()
+        except Exception:
+            print("\033[31mAborted invoked program:\nThe program you invoked incurred an error.")
+            print("Try checking the number of arguments you passed, just in case.\033[37m")
+            sys.exit()
+    else:
+        program = ""
+        for arg in userInput:
+            program += arg
+        
+        try:
+            os.execv(cmd, (cmd, program))
+            sys.exit()
+        except Exception:
+            print("\033[31mAborted invoked program:\nEither the entered program name is not a recognized program in the directory")
+            print("OR an error has incurred inside the invoked program.\033[37m")
+            sys.exit()
+
+
+
+def invoke(userInput):
     pid = os.fork()
     
     if pid == 0:
-
         print(f"CHILD: child with pid = {os.getpid()}\n")
-        if len(userInput) > 1:
-            program = userInput[0]
-            sys.argv = userInput
-
-            try:
-                script_descriptor = open(program)
-                a_script = script_descriptor.read()
-            except Exception:
-                print(f"\033[31m{program} is not a recognized program within the current directory...\033[37m\n")
-                sys.exit()
-
-            try:
-                exec(a_script)
-                script_descriptor.close()
-                sys.exit()
-            except Exception:
-                print("\033[31mAborted invoked program:\nThe program you invoked incurred an error.")
-                print("Try checking the number of arguments you passed, just in case.\033[37m")
-                sys.exit()
-        else:
-            program = ""
-            for arg in userInput:
-                program += arg
-            
-            try:
-                os.execv(cmd, (cmd, program))
-                sys.exit()
-            except Exception:
-                print("\033[31mAborted invoked program:\nEither the entered program name is not a recognized program in the directory")
-                print("OR an error has incurred inside the invoked program.\033[37m")
-                sys.exit()
-
+        runProgram(userInput)
     elif pid > 0:
         print(f"PARENT: parent with pid = {os.getpid()}\n")
         print("--- EVERYTHING BELOW IS FROM INSIDE THE INVOKED PROGRAM ---\n")
@@ -95,6 +98,21 @@ def invoke(userInput):
         
     else:
         print("\033[31mforking error\n\033[37m")
+
+
+
+def invokeProgram(userInput):
+    if userInput[len(userInput) - 1] == '&':
+        if len(userInput) > 2:
+            arguments = userInput[:len(userInput) - 1]
+        else:
+            arguments = userInput
+
+        background_program = threading.Thread(target= runProgram, name= "myShell.backgroundProgram", args= (arguments,))
+        background_program.start()
+        background_program.join()
+    else:
+        invoke(userInput)
 
 
 
@@ -130,7 +148,7 @@ def execute(userInput):
         sys.exit()
     else:
         command = userInput
-        invoke(command)
+        invokeProgram(command)
 
 
 
@@ -216,9 +234,6 @@ def redirection(userInput):
     sys.stdout = sys.__stdout__
 
     
-    
-
-
 
 ########################################################-- LOOP STARTS HERE --################################################################
 
@@ -238,7 +253,3 @@ if len(sys.argv) > 1:
 while True:
     userInput = input(f"\033[32m{os.getcwd()}\nmyshell>>\033[37m ")
     execute(userInput)
-    
-    
-
-
