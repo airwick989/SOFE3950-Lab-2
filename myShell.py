@@ -223,8 +223,10 @@ def redirection(userInput):
         
         for line in lines:
             line = line.strip()
-            prompt = "".join(line)
-            print(prompt)
+            passedCommand = prompt + " " + line
+            execute(passedCommand)
+    else:
+        execute(prompt)
 
     if inputflag:
         fdin.close()
