@@ -42,6 +42,7 @@ def help(): #Retrieve every line from the user manual
     with open("readme.txt") as file_in:
         lines = []
         for line in file_in:
+            line.rstrip("\n")
             lines.append(line)
     
     for line in lines:  #Print and format the user manual for display in terminal
